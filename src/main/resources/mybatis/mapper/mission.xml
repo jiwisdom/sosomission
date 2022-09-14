@@ -1,0 +1,559 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.green.mission.service.IService">
+	<select id='getUserName' resultType="string">
+		SELECT name FROM
+		mission_member WHERE id=#{param1} and pw=#{param2}
+	</select>
+
+	<select id='getAdminName' resultType="string">
+		SELECT name FROM
+		mission_admin WHERE id=#{param1} and pw=#{param2}
+	</select>
+
+	<select id='findId' resultType="string">
+		select id FROM mission_member
+		WHERE name=#{param1} and tel=#{param2}
+	</select>
+
+	<select id='findPw' resultType="string">
+		SELECT pw FROM mission_member
+		WHERE id=#{param1} and tel=#{param2}
+	</select>
+
+	<select id='idCheck' resultType='_int'>
+		SELECT count(*) FROM
+		mission_member WHERE id=#{param1}
+	</select>
+
+	<insert id='regist'>
+		INSERT into mission_member
+		values(#{param1},#{param2},#{param3},#{param4},#{param5},sysdate,0)
+	</insert>
+
+	<select id='alreadyRegist' resultType='_int'>
+		SELECT count(*) FROM
+		mission_member WHERE name=#{param1} and tel=#{param2}
+	</select>
+
+	<select id='getMyInfo'
+		resultType='com.green.mission.db.MemberDTO'>
+		select id,pw,name,tel,email,to_char(reg_date,'yyyy-MM-dd')
+		FROM mission_member WHERE id=#{param1}
+	</select>
+
+	<select id='getPw' resultType='string'>
+		SELECT pw FROM mission_member
+		WHERE id=#{param1}
+	</select>
+
+	<update id='updateMyInfo'>
+		UPDATE mission_member set pw =#{param1},
+		name=#{param2}, tel=#{param3},email=#{param4} WHERE id=#{param5}
+	</update>
+
+	<select id='getPoint' resultType='_int'>
+		SELECT point FROM
+		mission_member WHERE id=#{param1}
+	</select>
+
+	<delete id='deleteMember'>
+		DELETE mission_member WHERE id=#{pram1}
+	</delete>
+
+	<update id='givePoint'>
+		UPDATE mission_member set point = (SELECT point FROM
+		mission_member WHERE id=#{param1})+1 WHERE id=#{param1}
+	</update>
+
+	<!--미션 -->
+
+	<select id='countMission' resultType="_int">
+		SELECT count(*) FROM
+		mission
+	</select>
+
+	<select id='getMission'
+		resultType='com.green.mission.db.ProvidedMissionDTO'>
+		SELECT mission_name,mission_url FROM mission WHERE
+		num=#{param1}
+	</select>
+
+	<insert id='usePoint'>
+		INSERT into usePoint
+		values(#{param1},#{param2})
+	</insert>
+
+	<update id='minusPoint'>
+		UPDATE mission_member set point = (SELECT point FROM
+		mission_member WHERE id=#{param1})-1 WHERE id=#{param1}
+	</update>
+
+	<select id='usePointList' resultType='string'>
+		SELECT usepointdate FROM
+		usePoint WHERE to_Char(usepointdate,'yyyy-MM')=#{param1} and
+		id=#{param2} group by usepointdate order by usepointdate
+	</select>
+
+	<select id='doMissionList' resultType='string'>
+		SELECT startdate FROM
+		Domission WHERE to_Char(startDate,'yyyy-MM')=#{param1} and
+		id=#{param2} group by startDate order by startDate
+	</select>
+
+	<select id='getComments'
+		resultType='com.green.mission.db.MissionCommentsDTO'>
+		SELECT to_Char(startDate,'yyyy-MM-dd') as
+		startDate,startTime,mission_name,comments FROM Domission WHERE
+		startdate=#{param1} and id=#{param2}
+	</select>
+
+	<select id='getTodayMissionCount' resultType='_int'>
+		SELECT count(*)
+		FROM domission WHERE id=#{param1} and startdate=#{param2}
+	</select>
+
+	<update id='missionPercentage_Fail'>
+		UPDATE mission set
+		fail=(SELECT fail FROM mission
+		WHERE mission_name=#{param1})+#{param2},
+		play_count=(SELECT play_count
+		FROM mission WHERE
+		mission_name=#{param1})+#{param2}
+		WHERE
+		mission_name=#{param1}
+	</update>
+
+	<update id='missionPercentage_Success'>
+		UPDATE mission set
+		success=(SELECT success FROM
+		mission WHERE mission_name=#{param1})+1,
+		play_count=(SELECT play_count
+		FROM mission WHERE
+		mission_name=#{param1})+1
+		WHERE
+		mission_name=#{param1}
+	</update>
+
+	<insert id='writeComment'>
+		INSERT into domission
+		values(#{param1},#{param2},#{param3},#{param4},#{param5})
+	</insert>
+
+
+	<insert id='suggestMission'>
+		INSERT into suggest_mission
+		values(suggest_seq.nextval,#{param1},#{param2},#{param3},sysdate,'미확인')
+	</insert>
+
+	<select id='mySuggestionList'
+		resultType='com.green.mission.db.SuggestDTO'>
+		SELECT
+		suggest_num,id,title,mission,to_char(suggest_date,'yyyy-MM-dd'),check_state
+		FROM (SELECT rownum as num ,s.* FROM (SELECT * FROM (SELECT * FROM
+		suggest_mission ) order by suggest_num desc )s
+		WHERE id=#{param1} order
+		by rownum)
+		WHERE num between (#{param2}*5)-4 and #{param2}*5
+	</select>
+
+	<select id='searchMySuggestionList'
+		resultType='com.green.mission.db.SuggestDTO'>
+		SELECT
+		suggest_num,id,title,mission,to_char(suggest_date,'yyyy-MM-dd'),check_state
+		FROM (SELECT rownum as num ,s.* FROM (SELECT * FROM (SELECT * FROM
+		suggest_mission )
+		WHERE check_state=#{param1} and id=#{param2} order by
+		suggest_num desc )s order by rownum)
+		WHERE num between (#{param3}*5)-4
+		and #{param3}*5
+	</select>
+
+	<select id='countAllMySuggestion' resultType='_int'>
+		SELECT count(*)
+		FROM suggest_mission WHERE id=#{param1}
+	</select>
+
+	<select id='countSearchMySuggestion' resultType='_int'>
+		SELECT count(*)
+		FROM suggest_mission WHERE check_state=#{param1} and id=#{param2}
+	</select>
+
+	<select id='suggestionContent'
+		resultType='com.green.mission.db.SuggestDTO'>
+		SELECT * FROM suggest_mission WHERE suggest_num=#{param1}
+	</select>
+
+	<select id='getCheck_state' resultType='string'>
+		SELECT check_state FROM
+		suggest_mission WHERE suggest_num=#{param1}
+	</select>
+
+	<update id='updateCheck_state'>
+		UPDATE suggest_mission set check_state=#{param1}
+		WHERE suggest_num=#{param2}
+	</update>
+
+	<select id='getTitleByNum' resultType='string'>
+		SELECT title FROM
+		development_mission WHERE suggest_num=#{param1}
+	</select>
+
+	<select id='getTitleByUrl' resultType='string'>
+		SELECT title FROM
+		development_mission WHERE url=#{param1}
+	</select>
+	
+	<select id='getSuggestNumByTitle' resultType='string'>
+		SELECT suggest_num FROM
+		development_mission WHERE title=#{param1}
+	</select>
+	
+
+	<select id='getSuggest_num' resultType='string'>
+		SELECT suggest_num FROM
+		development_mission WHERE title=#{param1}
+	</select>
+
+	<update id='updateSuggestion'>
+		UPDATE suggest_mission set title=#{param1}, mission
+		=#{param2} WHERE suggest_num=#{param3}
+	</update>
+
+	<delete id='deleteSuggestion'>
+		DELETE suggest_mission WHERE suggest_num=#{param1}
+	</delete>
+
+	<select id='getProgressByUrl'
+		resultType='com.green.mission.db.DevelopmentDTO'>
+		SELECT * FROM development_mission WHERE url=#{param1}
+	</select>
+
+	<select id='getProgressByNum'
+		resultType='com.green.mission.db.DevelopmentDTO'>
+		SELECT * FROM development_mission WHERE
+		suggest_num=#{param1}
+	</select>
+
+	<select id='getProgressByTitle'
+		resultType='com.green.mission.db.DevelopmentDTO'>
+		SELECT * FROM development_mission WHERE title=#{param1}
+	</select>
+
+	<insert id='writeReply'>
+		INSERT into development_reply
+		values(#{param1},#{param2},reply_seq.nextval,#{param3},sysdate,#{param4})
+	</insert>
+
+	<select id='getReply' resultType='com.green.mission.db.ReplyDTO'>
+		SELECT * FROM development_reply
+		WHERE title=#{param1} order by write_date
+	</select>
+
+	<select id='getNewReply'
+		resultType='com.green.mission.db.ReplyDTO'>
+		SELECT
+		id,suggest_num,reply_num,reply_comment,write_date,title
+		FROM(SELECT
+		ROWNUM,d.*
+		FROM (SELECT * FROM development_reply
+		WHERE title = #{param1}
+		order by write_date desc)d
+		WHERE rownum=1 order by rownum)
+	</select>
+
+	<select id='getPercentage'
+		resultType='com.green.mission.db.SuccessDTO'>
+		SELECT mission_name,NVL(success/
+		DECODE(play_count,0,NULL,play_count),0)*100 FROM mission order by num
+	</select>
+
+	<select id='allMemberList'
+		resultType='com.green.mission.db.MemberDTO'>
+		SELECT id,pw,name,tel,email,to_char(reg_date,'yyyy-MM-dd')
+		FROM (SELECT rownum as num ,s.* FROM (SELECT * FROM (SELECT * FROM
+		mission_member ) order by reg_date desc )s order by rownum)
+		WHERE num
+		between (#{param1}*5)-4 and #{param1}*5
+	</select>
+
+	<select id='searchIdMemberList'
+		resultType='com.green.mission.db.MemberDTO'>
+		SELECT id,pw,name,tel,email,to_char(reg_date,'yyyy-MM-dd')
+		FROM (SELECT rownum as num ,s.* FROM (SELECT * FROM mission_member
+		WHERE id like '%'||#{param1}||'%' order by reg_date desc )s order by
+		num)
+		WHERE num between (#{param2}*5)-4 and #{param2}*5
+	</select>
+
+	<select id='searchNameMemberList'
+		resultType='com.green.mission.db.MemberDTO'>
+		SELECT id,pw,name,tel,email,to_char(reg_date,'yyyy-MM-dd')
+		FROM (SELECT rownum as num ,s.* FROM (SELECT * FROM mission_member
+		WHERE name like '%'||#{param1}||'%' order by reg_date desc )s order by
+		num)
+		WHERE num between (#{param2}*5)-4 and #{param2}*5
+	</select>
+
+	<select id='countMemberList' resultType='_int'>
+		SELECT count(*) FROM
+		mission_member
+	</select>
+
+	<select id='countSearchIdMemberList' resultType='_int'>
+		SELECT count(*)
+		FROM mission_member WHERE id like '%'||#{param1}||'%'
+	</select>
+
+	<select id='countSearchNameMemberList' resultType='_int'>
+		SELECT
+		count(*) FROM mission_member WHERE name like '%'||#{param1}||'%'
+	</select>
+
+	<select id='allDeleteMemberList'
+		resultType='com.green.mission.db.DeleteMemberDTO'>
+		SELECT
+		num,id,pw,name,tel,email,to_char(reg_date,'yyyy-MM-dd'),to_char(sec_date,'yyyy-MM-dd')
+		FROM (SELECT rownum as num, s.*FROM(SELECT * FROM
+		mission_member_secession order by reg_date desc)s order by num)
+		WHERE
+		num between (#{param1}*5)-4 and #{param1}*5
+	</select>
+
+	<select id='searchIdDeleteMemberList'
+		resultType='com.green.mission.db.DeleteMemberDTO'>
+		SELECT
+		id,pw,name,tel,email,to_char(reg_date,'yyyy-MM-dd'),to_char(sec_date,'yyyy-MM-dd')
+		FROM (SELECT rownum as num ,s.* FROM (SELECT * FROM
+		mission_member_secession WHERE id like '%'||#{param1}||'%' order by
+		reg_date desc )s order by num)
+		WHERE num between (#{param2}*5)-4 and
+		#{param2}*5
+	</select>
+
+	<select id='searchNameDeleteMemberList'
+		resultType='com.green.mission.db.DeleteMemberDTO'>
+		SELECT
+		id,pw,name,tel,email,to_char(reg_date,'yyyy-MM-dd'),to_char(sec_date,'yyyy-MM-dd')
+		FROM (SELECT rownum as num ,s.* FROM (SELECT * FROM
+		mission_member_secession WHERE name like '%'||#{param1}||'%' order by
+		reg_date desc )s order by num)
+		WHERE num between (#{param2}*5)-4 and
+		#{param2}*5
+	</select>
+
+	<select id='countDeleteMemberList' resultType='_int'>
+		SELECT count(*)
+		FROM mission_member_secession
+	</select>
+
+	<select id='countSearchIdDeleteMemberList' resultType='_int'>
+		SELECT
+		count(*) FROM mission_member_secession WHERE id like
+		'%'||#{param1}||'%'
+	</select>
+
+	<select id='countSearchNameDeleteMemberList' resultType='_int'>
+		SELECT
+		count(*) FROM mission_member_secession WHERE name like
+		'%'||#{param1}||'%'
+	</select>
+
+	<select id='getNewMissionSuggestNum' resultType="Integer">
+		SELECT
+		suggest_num FROM
+		(SELECT rownum as num,m.* FROM
+		(SELECT * FROM (SELECT *
+		FROM addmission order by insertDate desc))m order by
+		num)
+		WHERE num=1
+	</select>
+
+	<select id='getNewMissionId' resultType='string'>
+		SELECT id FROM
+		suggest_mission WHERE suggest_num=#{param1}
+	</select>
+
+	<select id='getNewMissionName' resultType='string'>
+		SELECT mission_name
+		FROM mission WHERE num=(SELECT max(num) FROM mission)
+	</select>
+
+
+	<select id='getAllMission'
+		resultType='com.green.mission.db.MissionDTO'>
+		SELECT
+		num,mission_name,mission_url,to_char(INSERT_date,'yyyy-MM-dd')
+		FROM
+		(SELECT rownum as rnum ,s.* FROM (SELECT * FROM (SELECT * FROM
+		mission
+		) order by num desc )s order by rnum)
+		WHERE rnum between
+		(#{param1}*5)-4 and #{param1}*5
+	</select>
+
+
+	<select id='allSuggestionList'
+		resultType='com.green.mission.db.SuggestDTO'>
+		SELECT
+		suggest_num,id,title,mission,to_char(suggest_date,'yyyy-MM-dd'),check_state
+		FROM (SELECT rownum as num ,s.* FROM (SELECT * FROM (SELECT * FROM
+		suggest_mission ) order by suggest_num desc )s order by rownum)
+		WHERE
+		num between (#{param1}*5)-4 and #{param1}*5
+	</select>
+
+	<select id='searchAllSuggestionList'
+		resultType='com.green.mission.db.SuggestDTO'>
+		SELECT
+		suggest_num,id,title,mission,to_char(suggest_date,'yyyy-MM-dd'),check_state
+		FROM (SELECT rownum as num ,s.* FROM (SELECT * FROM (SELECT * FROM
+		suggest_mission )
+		WHERE check_state=#{param1} order by suggest_num desc
+		)s order by rownum) WHERE num between (#{param2}*5)-4 and #{param2}*5
+	</select>
+
+	<select id='countSearchAllSuggestionList' resultType='_int'>
+		SELECT
+		count(*) FROM suggest_mission
+	</select>
+
+	<select id='countSearchSuggestionList' resultType='_int'>
+		SELECT
+		count(*) FROM suggest_mission WHERE check_state=#{param1}
+	</select>
+
+	<select id='allDevelopmentList'
+		resultType='com.green.mission.db.DevelopmentDTO'>
+		SELECT
+		suggest_num,title,url,startDate,updateDate,id,comments,html,css,js,java
+		FROM (SELECT rownum as num ,s.*
+		FROM (SELECT * FROM (SELECT * FROM
+		development_mission ) order by
+		startDate desc )s order by num)
+		WHERE num
+		between (#{param1}*5)-4 and #{param1}*5
+	</select>
+
+	<select id='searchTitleDevelopmentList'
+		resultType='com.green.mission.db.DevelopmentDTO'>
+		SELECT
+		suggest_num,title,url,startDate,updateDate,id,comments,html,css,js,java
+		FROM (SELECT rownum as num ,s.*
+		FROM (SELECT * FROM (SELECT * FROM
+		development_mission )WHERE title like
+		'%'||#{param1}||'%' order by
+		startDate desc )s order by num)
+		WHERE num
+		between (#{param2}*5)-4 and
+		#{param2}*5
+	</select>
+
+	<select id='searchIdDevelopmentList'
+		resultType='com.green.mission.db.DevelopmentDTO'>
+		SELECT
+		suggest_num,title,url,startDate,updateDate,id,comments,html,css,js,java
+		FROM (SELECT rownum as num ,s.*
+		FROM (SELECT * FROM (SELECT * FROM
+		development_mission )WHERE id like
+		'%'||#{param1}||'%' order by
+		startDate desc )s order by num)
+		WHERE num
+		between (#{param2}*5)-4 and
+		#{param2}*5
+	</select>
+
+	<select id='countAllDevelopmentList' resultType='_int'>
+		SELECT count(*)
+		FROM development_mission
+	</select>
+
+	<select id='countSearchIdDevelopmentList' resultType='_int'>
+		SELECT
+		count(*) FROM development_mission WHERE id like '%'||#{param1}||'%'
+	</select>
+
+	<select id='countSearchTitleDevelopmentList' resultType='_int'>
+		SELECT
+		count(*) FROM development_mission WHERE title like '%'||#{param1}||'%'
+	</select>
+
+	<update id='updateProgressMission'>
+		UPDATE development_mission SET comments=#{param2},
+		html=#{param3}, css=#{param4},
+		js=#{param5},java=#{param6},updateDate=sysdate WHERE title=#{param1}
+	</update>
+
+	<select id='getUrlFromDevelopment' resultType='string'>
+		SELECT url FROM
+		development_mission WHERE title=#{param1}
+	</select>
+	
+	
+
+	<insert id='addNewMission'>
+		INSERT into mission values((SELECT count(*)+1 FROM
+		mission),#{param1},#{param2},sysdate,0,0,0)
+	</insert>
+
+	<update id='updateBeforeAdd'>
+		UPDATE development_mission SET comments=#{param2}
+		WHERE title=#{param1}
+	</update>
+
+	<insert id='insertDevelopment'>
+		INSERT into development_mission
+		values(#{param1},#{param2},#{param3},sysdate,sysdate,#{param4},'',0,0,0,0)
+	</insert>
+
+	<select id='nameCheckAtDevelop' resultType='_int'>
+		SELECT count(*) FROM
+		development_mission WHERE title = #{param1}
+	</select>
+
+	<select id='nameCheckAtMission' resultType="_int">
+		SELECT count(*) FROM
+		mission WHERE mission_name =#{param1}
+	</select>
+
+	<select id='urlCheckAtDevelop' resultType='_int'>
+		SELECT count(*) FROM
+		development_mission WHERE url =#{param1}
+	</select>
+
+	<select id='urlCheckAtMission' resultType='_int'>
+		SELECT count(*) FROM
+		mission WHERE mission_url =#{param1}
+	</select>
+
+	<delete id='deletAtDevelopmet'>
+		DELETE development_mission WHERE title=#{param1}
+	</delete>
+
+	<delete id='delteReplyAtDevelopmet'>
+		DELETE development_reply WHERE suggest_num=#{param1}
+	</delete>
+
+	<update id='insertReplyToAddMission'>
+		UPDATE addMission SET reply=#{param1} WHERE
+		title=#{param2}
+	</update>
+
+	<select id='getAddMissionProgressContent'
+		resultType='com.green.mission.db.AddMissionDTO'>
+		SELECT * FROM addMission WHERE title=#{param1}
+	</select>
+
+	<update id='updateReply'>
+		UPDATE development_reply SET reply_comment=#{param1}
+		WHERE reply_num=#{param2}
+	</update>
+
+	<delete id='deleteReply'>
+		DELETE development_reply WHERE reply_num=#{param1}
+	</delete>
+
+</mapper>
